@@ -1,7 +1,7 @@
 create table if not exists payments(
  id bigint generated always as identity primary key,
  rp_order text unique not null,
- rp_payment text unique,
+ r,p_payment text unique,
  user_id uuid references profiles(id) on delete set null,
  kind text not null,
  amount int not null,
