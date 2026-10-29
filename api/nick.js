@@ -10,6 +10,27 @@ module.exports = async (req, res) => {
   const id = String(req.query.id || '').trim();
   const zone = String(req.query.zone || '').trim();
   if (!/^\d{4,15}$/.test(id) || (zone && !/^\d{1,8}$/.test(zone))) return res.status(200).json({ notfound: true });
+  if (g === 'ml' && process.env.TOPZY_API_KEY) {
+    // Mobile Legends name check through Topzy
+    const ac2 = new AbortController();
+    const tm2 = setTimeout(() => ac2.abort(), 6000);
+    try {
+      const r = await fetch('https://topzy.in/api/partner/validation', {
+        method: 'POST', signal: ac2.signal,
+        headers: { 'x-api-key': process.env.TOPZY_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId: 'mlbb', userId: id, zoneId: zone }),
+      });
+      const j = await r.json().catch(() => ({}));
+      const nm = j.data && j.data.username;
+      if (r.ok && j.success !== false && nm) return res.status(200).json({ ok: true, name: String(nm).slice(0, 40) });
+      if (r.status === 404 || /not.?found|invalid/i.test(String(j.message || j.error || ''))) return res.status(200).json({ notfound: true });
+      return res.status(200).json({ error: 'lookup unavailable', why: 'HTTP ' + r.status + ' ' + String(j.message || j.error || '').slice(0, 80) });
+    } catch (e) {
+      return res.status(200).json({ error: 'lookup unavailable', why: String((e && e.message) || e).slice(0, 80) });
+    } finally {
+      clearTimeout(tm2);
+    }
+  }
   const tpl = process.env['NICK_URL_' + g.toUpperCase()] || DEFAULTS[g];
   if (!tpl) return res.status(200).json({ error: 'not configured' });
   const url = tpl.replace('{id}', encodeURIComponent(id)).replace('{zone}', encodeURIComponent(zone));
@@ -30,3 +51,4 @@ module.exports = async (req, res) => {
     clearTimeout(tm);
   }
 };
+
