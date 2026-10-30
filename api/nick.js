@@ -22,10 +22,13 @@ module.exports = async (req, res) => {
       });
       const j = await r.json().catch(() => ({}));
       const nm = j.data && j.data.username;
+      // Log Topzy's reply for debugging (status and message only, never the API key)
+      console.log('TOPZY validation', JSON.stringify({ id, zone, status: r.status, success: j.success, message: j.message || j.error || null, found: !!nm }));
       if (r.ok && j.success !== false && nm) return res.status(200).json({ ok: true, name: String(nm).slice(0, 40) });
       if (r.status === 404 || /not.?found|invalid/i.test(String(j.message || j.error || ''))) return res.status(200).json({ notfound: true });
       return res.status(200).json({ error: 'lookup unavailable', why: 'HTTP ' + r.status + ' ' + String(j.message || j.error || '').slice(0, 80) });
     } catch (e) {
+      console.log('TOPZY validation error', String((e && e.message) || e).slice(0, 200));
       return res.status(200).json({ error: 'lookup unavailable', why: String((e && e.message) || e).slice(0, 80) });
     } finally {
       clearTimeout(tm2);
@@ -49,4 +52,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ error: 'lookup unavailable', why: String(e && e.message || e).slice(0, 80) });
   } finally {
     clearTimeout(tm);
-
+  }
+};
+ 
