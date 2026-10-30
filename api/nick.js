@@ -10,7 +10,8 @@ module.exports = async (req, res) => {
   const id = String(req.query.id || '').trim();
   const zone = String(req.query.zone || '').trim();
   if (!/^\d{4,15}$/.test(id) || (zone && !/^\d{1,8}$/.test(zone))) return res.status(200).json({ notfound: true });
-  if (g === 'ml' && process.env.TOPZY_API_KEY) {
+  // Topzy name check is OFF unless TOPZY_NICK=on is set in Vercel. Off = previous provider is used.
+  if (g === 'ml' && process.env.TOPZY_NICK === 'on' && process.env.TOPZY_API_KEY) {
     // Mobile Legends name check through Topzy
     const ac2 = new AbortController();
     const tm2 = setTimeout(() => ac2.abort(), 6000);
@@ -54,4 +55,3 @@ module.exports = async (req, res) => {
     clearTimeout(tm);
   }
 };
- 
