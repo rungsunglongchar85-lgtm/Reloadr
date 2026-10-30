@@ -49,6 +49,4 @@ module.exports = async (req, res) => {
     return res.status(200).json({ error: 'lookup unavailable', why: String(e && e.message || e).slice(0, 80) });
   } finally {
     clearTimeout(tm);
-  }
-};
 
